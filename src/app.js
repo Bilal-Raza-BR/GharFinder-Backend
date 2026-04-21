@@ -7,11 +7,21 @@ const { notFound, errorHandler } = require('./middlewares/errorMiddleware');
 
 const app = express();
 
+// app.use(cors({
+//   origin: [
+//     "http://localhost:3000",
+//     "http://localhost:3001",
+//     "https://ghar-finder-frontend.vercel.app" // Jab frontend deploy ho jaye, toh uska actual domain yahan zaroor add karein
+//   ],
+//   credentials: true,
+// }));
 app.use(cors({
-  origin: ["http://localhost:3000", "http://localhost:3001"],
+  origin: [
+    "http://localhost:3000",
+    "https://ghar-finder-frontend.vercel.app"
+  ],
   credentials: true,
 }));
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
