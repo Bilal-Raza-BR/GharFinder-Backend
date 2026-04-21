@@ -18,11 +18,11 @@ const app = express();
 app.use(cors({
   origin: [
     "http://localhost:3000",
-    "https://ghar-finder-frontend.vercel.app",
     "https://ghar-finder-frontend.vercel.app"
   ],
   credentials: true,
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

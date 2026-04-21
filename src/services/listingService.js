@@ -1,11 +1,15 @@
 const Listing = require('../models/Listing');
 const ApiError = require('../utils/apiError');
-const cloudinaryService = require('./cloudinaryService'); // 🔥 FIX
+const cloudinaryService = require('./cloudinaryService');
 
 const parseBoolean = (value) => value === true || value === 'true';
 
-exports.createListing = async (data) => Listing.create(data);
+// ---------------- CREATE ----------------
+exports.createListing = async (data) => {
+  return await Listing.create(data);
+};
 
+// ---------------- GET FILTERED LISTINGS (FIXED) ----------------
 exports.getFilteredListings = async ({
   minPrice,
   maxPrice,
@@ -23,30 +27,30 @@ exports.getFilteredListings = async ({
   if (minPrice !== undefined) {
     filter.price = { ...(filter.price || {}), $gte: Number(minPrice) };
   }
+
   if (maxPrice !== undefined) {
     filter.price = { ...(filter.price || {}), $lte: Number(maxPrice) };
   }
+
   if (rooms !== undefined) {
     const roomNum = Number(rooms);
-    if (roomNum === 3) {
-      filter.rooms = { $gte: roomNum };
-    } else {
-      filter.rooms = { $lte: roomNum };
-    }
+    filter.rooms = roomNum === 3 ? { $gte: roomNum } : { $lte: roomNum };
   }
+
   if (furnished !== undefined) {
     filter.furnished = parseBoolean(furnished);
   }
+
   if (familyAllowed !== undefined) {
     filter.familyAllowed = parseBoolean(familyAllowed);
   }
+
   if (location) {
     filter.location = { $regex: location, $options: 'i' };
   }
-  if (status !== undefined) {
-    if (status !== 'all') {
-      filter.status = status;
-    }
+
+  if (status && status !== 'all') {
+    filter.status = status;
   } else {
     filter.$or = [{ status: 'active' }, { status: { $exists: false } }];
   }
@@ -57,26 +61,23 @@ exports.getFilteredListings = async ({
 
   const query = Listing.find(filter).populate('owner', 'phone name');
 
-  if (sort === 'asc') {
-    query.sort({ price: 1 });
-  } else if (sort === 'desc') {
-    query.sort({ price: -1 });
-  } else {
-    query.sort({ createdAt: -1 });
-  }
+  if (sort === 'asc') query.sort({ price: 1 });
+  else if (sort === 'desc') query.sort({ price: -1 });
+  else query.sort({ createdAt: -1 });
 
   const [total, listings] = await Promise.all([
     Listing.countDocuments(filter),
     query.skip(skip).limit(pageSize).lean(),
   ]);
 
+  // ---------------- SAFE MAPPING (FIXED CRASH) ----------------
   const items = listings.map((listing) => ({
     ...listing,
+    owner: listing.owner?._id?.toString?.() || null,
     ownerPhone: listing.owner?.phone || null,
     contactLink: listing.owner?.phone
       ? `https://wa.me/${listing.owner.phone}`
       : null,
-    owner: listing.owner?._id?.toString(),
   }));
 
   return {
@@ -90,6 +91,7 @@ exports.getFilteredListings = async ({
   };
 };
 
+// ---------------- GET BY ID (FIXED) ----------------
 exports.getListingById = async (id) => {
   const listing = await Listing.findById(id)
     .populate('owner', 'phone name')
@@ -101,14 +103,15 @@ exports.getListingById = async (id) => {
 
   return {
     ...listing,
+    owner: listing.owner?._id?.toString?.() || null,
     ownerPhone: listing.owner?.phone || null,
     contactLink: listing.owner?.phone
       ? `https://wa.me/${listing.owner.phone}`
       : null,
-    owner: listing.owner?._id?.toString(),
   };
 };
 
+// ---------------- UPDATE ----------------
 exports.updateListing = async (id, updateData, userId) => {
   const listing = await Listing.findById(id);
 
@@ -116,7 +119,7 @@ exports.updateListing = async (id, updateData, userId) => {
     throw new ApiError(404, 'Listing not found');
   }
 
-  if (listing.owner.toString() !== userId) {
+  if (listing.owner.toString() !== String(userId)) {
     throw new ApiError(403, 'You can only update your own listings');
   }
 
@@ -126,6 +129,7 @@ exports.updateListing = async (id, updateData, userId) => {
   return listing;
 };
 
+// ---------------- DELETE ----------------
 exports.deleteListing = async (id, userId) => {
   const listing = await Listing.findById(id);
 
@@ -133,15 +137,14 @@ exports.deleteListing = async (id, userId) => {
     throw new ApiError(404, 'Listing not found');
   }
 
-  if (listing.owner.toString() !== userId) {
+  if (listing.owner.toString() !== String(userId)) {
     throw new ApiError(403, 'You can only delete your own listings');
   }
 
-  // 🔥 Cloudinary se sab images delete (background)
   if (listing.images?.length) {
     listing.images.forEach((img) => {
       cloudinaryService.deleteImage(img).catch((err) => {
-        console.error('Cloudinary bulk delete failed:', err);
+        console.error('Cloudinary delete failed:', err);
       });
     });
   }
@@ -149,6 +152,7 @@ exports.deleteListing = async (id, userId) => {
   await listing.deleteOne();
 };
 
+// ---------------- DELETE IMAGE ----------------
 exports.deleteImage = async (id, imageUrl, userId) => {
   const listing = await Listing.findById(id);
 
@@ -156,15 +160,13 @@ exports.deleteImage = async (id, imageUrl, userId) => {
     throw new ApiError(404, 'Listing not found');
   }
 
-  if (listing.owner.toString() !== userId) {
+  if (listing.owner.toString() !== String(userId)) {
     throw new ApiError(403, 'You can only delete images from your own listings');
   }
 
-  // ✅ Remove from DB
   listing.images = listing.images.filter((img) => img !== imageUrl);
   await listing.save();
 
-  // ✅ Delete from Cloudinary (background)
   if (imageUrl) {
     cloudinaryService.deleteImage(imageUrl).catch((err) => {
       console.error('Cloudinary delete failed:', err);

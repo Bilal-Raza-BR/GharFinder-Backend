@@ -7,7 +7,6 @@ const PORT = process.env.PORT || 5000;
 // Connect to the database when the server starts
 connectDB().catch((err) => {
   console.error('Database connection failed:', err);
-  process.exit(1); // Exit process with failure
 });
 
 // For Vercel deployment, we export the app directly.
