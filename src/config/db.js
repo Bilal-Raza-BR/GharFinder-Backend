@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
 
+// Buffering off karein taake connection na hone par foran error mile
+mongoose.set('bufferCommands', false);
+
 let cached = global.mongoose;
 
 if (!cached) {
@@ -17,10 +20,16 @@ const connectDB = async () => {
     };
 
     console.log("Connecting to MongoDB...");
-    cached.promise = mongoose.connect(process.env.MONGODB_URI, opts).then((mongoose) => {
-      console.log("MongoDB Connected Successfully");
-      return mongoose;
-    });
+    cached.promise = mongoose.connect(process.env.MONGODB_URI, opts)
+      .then((mongooseInstance) => {
+        console.log("MongoDB Connected Successfully");
+        return mongooseInstance;
+      })
+      .catch((err) => {
+        console.error("MongoDB Connection Error Details:", err.message);
+        cached.promise = null; // Error par promise clear karein taake retry ho sake
+        throw err;
+      });
   }
 
   cached.conn = await cached.promise;
