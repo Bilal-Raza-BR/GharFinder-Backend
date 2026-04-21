@@ -10,7 +10,7 @@ const connectDB = async () => {
   if (cached.conn) return cached.conn;
 
   if (!process.env.MONGODB_URI) {
-    throw new Error('MONGODB_URI missing');
+    throw new Error('MONGODB_URI is not defined');
   }
 
   if (!cached.promise) {
