@@ -7,16 +7,16 @@ if (!cached) {
 }
 
 const connectDB = async () => {
-  const uri = process.env.MONGODB_URI;
-
-  if (!uri) {
-    throw new Error('MONGODB_URI is not defined');
-  }
-
   if (cached.conn) return cached.conn;
 
+  if (!process.env.MONGODB_URI) {
+    throw new Error('MONGODB_URI missing');
+  }
+
   if (!cached.promise) {
-    cached.promise = mongoose.connect(uri);
+    cached.promise = mongoose.connect(process.env.MONGODB_URI, {
+      bufferCommands: false,
+    });
   }
 
   cached.conn = await cached.promise;
