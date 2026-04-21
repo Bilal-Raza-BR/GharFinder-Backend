@@ -15,6 +15,11 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Root route for Vercel deployment check
+app.get('/', (req, res) => {
+  res.status(200).json({ message: 'GharFinder Backend server is running successfully!' });
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/listings', listingRoutes);
 app.use('/api/health', healthRoutes); // New health check route
