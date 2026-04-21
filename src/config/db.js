@@ -10,10 +10,16 @@ const connectDB = async () => {
   if (cached.conn) return cached.conn;
 
   if (!cached.promise) {
-    cached.promise = mongoose.connect(process.env.MONGODB_URI, {
+    const opts = {
       serverSelectionTimeoutMS: 5000, // 5 seconds mein fail ho jaye agar connect na ho
       socketTimeoutMS: 45000,
-      family: 4 // IPv4 use kare
+      family: 4, // IPv4 use kare
+    };
+
+    console.log("Connecting to MongoDB...");
+    cached.promise = mongoose.connect(process.env.MONGODB_URI, opts).then((mongoose) => {
+      console.log("MongoDB Connected Successfully");
+      return mongoose;
     });
   }
 
