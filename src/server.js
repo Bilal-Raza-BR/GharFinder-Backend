@@ -27,12 +27,23 @@
 // // and it will connect to the DB, but won't start a listener.
 // module.exports = app;
 require('dotenv').config();
+
 const app = require('./app');
+const connectDB = require('./config/db');
 
-/* 
-  VERCEL ONLY:
-  - No app.listen()
-  - No DB connect here
-*/
+let isConnected = false;
 
-module.exports = app;
+module.exports = async (req, res) => {
+  try {
+    if (!isConnected) {
+      await connectDB();
+      isConnected = true;
+      console.log('MongoDB connected');
+    }
+
+    return app(req, res);
+  } catch (err) {
+    console.error('Server Error:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
