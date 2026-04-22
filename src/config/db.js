@@ -1,3 +1,5 @@
+//db.js
+
 const mongoose = require('mongoose');
 
 // Global level par buffering band karein taake connection fail hone par foran pata chale

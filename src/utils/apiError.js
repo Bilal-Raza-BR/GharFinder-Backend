@@ -1,3 +1,5 @@
+//apiError.js
+
 class ApiError extends Error {
   constructor(statusCode, message) {
     super(message);
@@ -7,3 +9,4 @@ class ApiError extends Error {
 }
 
 module.exports = ApiError;
+

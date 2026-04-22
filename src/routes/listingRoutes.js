@@ -1,3 +1,4 @@
+//listingRoutes.js
 const express = require('express');
 const listingController = require('../controllers/listingController');
 const authMiddleware = require('../middlewares/authMiddleware');

@@ -1,3 +1,5 @@
+//listingService.js
+
 const Listing = require('../models/Listing');
 const ApiError = require('../utils/apiError');
 const cloudinaryService = require('./cloudinaryService');
@@ -44,10 +46,14 @@ exports.getFilteredListings = async ({
   if (familyAllowed !== undefined) {
     filter.familyAllowed = parseBoolean(familyAllowed);
   }
-
-  if (location) {
-    filter.location = { $regex: location, $options: 'i' };
-  }
+const escapeRegex = (text) =>
+  text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+ if (location) {
+  filter.location = {
+    $regex: escapeRegex(location),
+    $options: 'i',
+  };
+}
 
   if (status && status !== 'all') {
     filter.status = status;

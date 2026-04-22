@@ -1,3 +1,5 @@
+//validateRequest.js
+
 const ApiError = require('../utils/apiError');
 
 module.exports = (requiredFields) => (req, res, next) => {

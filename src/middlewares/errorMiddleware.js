@@ -1,3 +1,5 @@
+//errorMiddleware.js
+
 const ApiError = require('../utils/apiError');
 
 exports.notFound = (req, res, next) => {
